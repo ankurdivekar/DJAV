@@ -3,12 +3,22 @@
 import streamlit as st
 import pandas as pd
 from google.oauth2 import service_account
+
 # from shillelagh.backends.apsw.db import connect
 from gsheetsdb import connect
 from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_extras.colored_header import colored_header
+from streamlit_extras.dataframe_explorer import dataframe_explorer
+from streamlit_extras.let_it_rain import rain
+import plotly.express as px
 
-st.set_page_config(layout="wide", page_title="DJ AV's Sets", page_icon=":headphones:", initial_sidebar_state="auto", menu_items=None)
+st.set_page_config(
+    layout="wide",
+    page_title="DJ AV's Sets",
+    page_icon=":headphones:",
+    initial_sidebar_state="auto",
+    menu_items=None,
+)
 
 # Create a connection object.
 credentials = service_account.Credentials.from_service_account_info(
@@ -18,12 +28,14 @@ credentials = service_account.Credentials.from_service_account_info(
     ],
 )
 
+
 # Perform SQL query on the Google Sheet.
 # Uses st.cache_data to only rerun when the query changes or after 10 min.
 @st.cache_data(ttl=600)
 def run_query(query):
     rows = conn.execute(query, headers=1).fetchall()
     return pd.DataFrame.from_dict(data=rows)
+
 
 with st.spinner("Connecting to GSheets..."):
     with connect(credentials=credentials) as conn:
@@ -34,12 +46,25 @@ with st.spinner("Connecting to GSheets..."):
 
         sheet_url = st.secrets["sets_url"]
         df_sets = run_query(f'SELECT * FROM "{sheet_url}"')
-        
-        df = (df_sets.merge(df_geoloc, on=["Venue", "Area"], how='left'))
 
-        df['latitude'] = pd.to_numeric(df.Latitude, errors='coerce')
-        df['longitude'] = pd.to_numeric(df.Longitude, errors='coerce')
+        df = df_sets.merge(df_geoloc, on=["Venue", "Area"], how="left")
+
+        df["latitude"] = pd.to_numeric(df.Latitude, errors="coerce")
+        df["longitude"] = pd.to_numeric(df.Longitude, errors="coerce")
         df = df.drop(columns=["Comments", "Payments", "Latitude", "Longitude"])
+        df.Date = pd.to_datetime(df.Date)
+        df = df.sort_values(by="Date").reset_index(drop=True)
+        df["SetNo"] = df.index + 1
+        df = df.set_index("SetNo")
+
+        for col in [
+            "Event",
+            "Organizer",
+            # "EventType",
+            "VenueFullName",
+        ]:
+            df[col] = df[col].astype("category")
+
         # st.dataframe(df)
 
 colored_header(
@@ -48,17 +73,55 @@ colored_header(
     color_name="red-70",
 )
 
-col1, col2, col3, col4, col5 = st.columns(5)
-col1.metric(label="Sets played", value=df.shape[0])
-col2.metric(label="Venues played at", value=df.VenueFullName.nunique())
-col3.metric(label="Events played at", value=df.Event.nunique())
-col4.metric(label="Organizers worked with", value=df.Organizer.nunique())
-# col5.metric(label="Organizers worked with", value=df.Organizer.nunique())
-style_metric_cards()
+# Make headphone emojis rain!
+# rain(
+#     emoji="🎧",
+#     font_size=50,
+#     falling_speed=10,
+#     animation_length="infinite",
+# )
+
+# col1, col2, col3, col4 = st.columns(4)
+# col1.metric(label="Sets played", value=df.shape[0])
+# col2.metric(label="Venues played at", value=df.VenueFullName.nunique())
+# col3.metric(label="Events played at", value=df.Event.nunique())
+# col4.metric(label="Organizers worked with", value=df.Organizer.nunique())
+# style_metric_cards()
 # st.write(df.columns)
 # st.write(df.dtypes)
 # st.dataframe(df.query("latitude.isna()"))
 # st.dataframe(df.query("longitude.isna()"))
 
-st.markdown("### By Location")
-st.map(df, use_container_width=True)
+df_viz = df.drop(columns=["Venue", "Area"])
+
+
+filtered_df = dataframe_explorer(df_viz, case=False)
+
+if len(filtered_df) > 0:
+    f_col1, f_col2, f_col3, f_col4 = st.columns(4)
+    f_col1.metric(label="Sets played", value=filtered_df.shape[0])
+    f_col2.metric(label="Venues played at", value=filtered_df.VenueFullName.nunique())
+    f_col3.metric(label="Events played at", value=filtered_df.Event.nunique())
+    f_col4.metric(label="Organizers worked with", value=filtered_df.Organizer.nunique())
+    style_metric_cards()
+
+    st.dataframe(
+        filtered_df.drop(columns=["latitude", "longitude"]), use_container_width=True
+    )
+
+    # print(f"Cats: {filtered_df.EventType.unique()}")
+
+    # Create distplot with custom bin_size
+    fig = px.scatter(
+        data_frame=filtered_df,
+        x="Date",
+        y=filtered_df.index,
+        color="EventType",
+        # hover_data=["Event"],
+    )
+
+    # Plot!
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("### By Location")
+    st.map(filtered_df, use_container_width=True)
