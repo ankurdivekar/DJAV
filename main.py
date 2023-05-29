@@ -117,7 +117,7 @@ if len(filtered_df) > 0:
         x="Date",
         y=filtered_df.index,
         color="EventType",
-        # hover_data=["Event"],
+        hover_data=["Event", "VenueFullName", "Organizer"],
     )
 
     # Plot!
