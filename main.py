@@ -52,10 +52,14 @@ with st.spinner("Connecting to GSheets..."):
         df["latitude"] = pd.to_numeric(df.Latitude, errors="coerce")
         df["longitude"] = pd.to_numeric(df.Longitude, errors="coerce")
         df = df.drop(columns=["Comments", "Payments", "Latitude", "Longitude"])
-        df.Date = pd.to_datetime(df.Date)
+        df.Date = pd.to_datetime(
+            df.Date,
+            # format="%Y-%m-%d",
+            errors="coerce",
+        )
         df = df.sort_values(by="Date").reset_index(drop=True)
         df["SetNo"] = df.index + 1
-        df = df.set_index("SetNo")
+        df.index = df.Date
 
         for col in [
             "Event",
@@ -64,8 +68,6 @@ with st.spinner("Connecting to GSheets..."):
             "VenueFullName",
         ]:
             df[col] = df[col].astype("category")
-
-        # st.dataframe(df)
 
 colored_header(
     label=":headphones: DJ AV's sets",
@@ -105,23 +107,43 @@ if len(filtered_df) > 0:
     f_col4.metric(label="Organizers worked with", value=filtered_df.Organizer.nunique())
     style_metric_cards()
 
-    st.dataframe(
-        filtered_df.drop(columns=["latitude", "longitude"]), use_container_width=True
+    st.markdown("## Count of sets by Month & Year")
+    dff = (
+        filtered_df.assign(
+            YearMonth=lambda x: x.index.strftime("%Y-%m"),
+            # MonthYear=lambda x: x.index.strftime("%m-%Y"),
+        )
+        .groupby(["YearMonth", "EventType"])
+        .SetNo.count()
+        .reset_index(drop=False)
+        .rename(columns={"SetNo": "SetsCount"})
     )
-
-    # print(f"Cats: {filtered_df.EventType.unique()}")
-
-    # Create distplot with custom bin_size
-    fig = px.scatter(
-        data_frame=filtered_df,
-        x="Date",
-        y=filtered_df.index,
+    fig1 = px.bar(
+        dff,
+        x="YearMonth",
+        y="SetsCount",
         color="EventType",
-        # hover_data=["Event"],
+        barmode="stack",
+        hover_data=["EventType"],
     )
+    # fig1.update_xaxes(tickangle=45)
+    st.plotly_chart(fig1, use_container_width=True)
 
-    # Plot!
-    st.plotly_chart(fig, use_container_width=True)
+    # # Create distplot with custom bin_size
+    # fig2 = px.scatter(
+    #     data_frame=filtered_df,
+    #     x=filtered_df.index,
+    #     y="SetNo",
+    #     color="EventType",
+    #     # hover_data=["Event"],
+    # )
+    # st.plotly_chart(fig2, use_container_width=True)
 
-    st.markdown("### By Location")
+    st.markdown("## Sets by Location")
     st.map(filtered_df, use_container_width=True)
+
+    st.markdown("## Sets Data")
+    st.dataframe(
+        filtered_df.set_index("SetNo").drop(columns=["latitude", "longitude"]),
+        use_container_width=True,
+    )
