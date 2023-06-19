@@ -76,12 +76,12 @@ colored_header(
 )
 
 # Make headphone emojis rain!
-rain(
-    emoji="🎧",
-    font_size=50,
-    falling_speed=10,
-    animation_length="infinite",
-)
+# rain(
+#     emoji="🎧",
+#     font_size=50,
+#     falling_speed=10,
+#     animation_length="infinite",
+# )
 
 # col1, col2, col3, col4 = st.columns(4)
 # col1.metric(label="Sets played", value=df.shape[0])
