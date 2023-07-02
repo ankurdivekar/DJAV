@@ -54,8 +54,8 @@ with st.spinner("Connecting to GSheets..."):
         df = df.drop(columns=["Comments", "Payments", "Latitude", "Longitude"])
         df.Date = pd.to_datetime(
             df.Date,
-            # format="%Y-%m-%d",
-            errors="coerce",
+            format="%Y-%m-%d",
+            # errors="raise",
         )
         df = df.sort_values(by="Date").reset_index(drop=True)
         df["SetNo"] = df.index + 1
@@ -83,15 +83,14 @@ colored_header(
 #     animation_length="infinite",
 # )
 
-# col1, col2, col3, col4 = st.columns(4)
-# col1.metric(label="Sets played", value=df.shape[0])
-# col2.metric(label="Venues played at", value=df.VenueFullName.nunique())
-# col3.metric(label="Events played at", value=df.Event.nunique())
-# col4.metric(label="Organizers worked with", value=df.Organizer.nunique())
-# style_metric_cards()
 # st.write(df.columns)
-# st.write(df.dtypes)
-# st.dataframe(df.query("latitude.isna()"))
+# st.write(df.head(5))
+# print(df.tail(5))
+# print(df.dtypes)
+
+err = df.query("latitude.isna() or longitude.isna()")
+if len(err):
+    st.dataframe(err)
 # st.dataframe(df.query("longitude.isna()"))
 
 df_viz = df.drop(columns=["Venue", "Area"])
@@ -144,6 +143,8 @@ if len(filtered_df) > 0:
 
     st.markdown("## Sets Data")
     st.dataframe(
-        filtered_df.set_index("SetNo").drop(columns=["latitude", "longitude"]),
+        filtered_df.set_index("SetNo")
+        .drop(columns=["latitude", "longitude"])
+        .sort_values(by="Date", ascending=False),
         use_container_width=True,
     )
