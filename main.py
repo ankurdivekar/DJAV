@@ -31,7 +31,7 @@ credentials = service_account.Credentials.from_service_account_info(
 
 # Perform SQL query on the Google Sheet.
 # Uses st.cache_data to only rerun when the query changes or after 10 min.
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def run_query(query):
     rows = conn.execute(query, headers=1).fetchall()
     return pd.DataFrame.from_dict(data=rows)
