@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "djavsets"
+version = "0.1.0"
+description = "A streamlit app to show information about DJ AV's sets"
+authors = ["Ankur Divekar <ankur.divekar@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pandas = "^2.2.1"
+plotly = "^5.20.0"
+streamlit = "^1.32.2"
+streamlit-extras = "^0.4.0"
+google-auth = "^2.29.0"
+gsheetsdb = "^0.1.13.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
