@@ -12,6 +12,7 @@ from streamlit_extras.dataframe_explorer import dataframe_explorer
 from streamlit_extras.let_it_rain import rain
 from streamlit_extras.metric_cards import style_metric_cards
 
+print("Streamlit version:", st.__version__)
 st.set_page_config(
     layout="wide",
     page_title="DJ AV's Sets",
@@ -52,14 +53,16 @@ with st.spinner("Connecting to GSheets..."):
         df["latitude"] = pd.to_numeric(df.Latitude, errors="coerce")
         df["longitude"] = pd.to_numeric(df.Longitude, errors="coerce")
         df = df.drop(columns=["Comments", "Payments", "Latitude", "Longitude"])
+
         df.Date = pd.to_datetime(
             df.Date,
-            format="%Y-%m-%d",
-            # errors="raise",
+            format="%Y-%m-%d %H:%M:%S",
+            errors="raise",
         )
+
         df = df.sort_values(by="Date").reset_index(drop=True)
         df["SetNo"] = df.index + 1
-        df.index = df.Date
+        df.index = df.SetNo
 
         for col in [
             "Event",
@@ -69,9 +72,9 @@ with st.spinner("Connecting to GSheets..."):
         ]:
             df[col] = df[col].astype("category")
 
-        print(
-            f"No sets for locations:{[v for v in df_geoloc.VenueFullName if v not in df.VenueFullName.unique()]}"
-        )
+        # print(
+        #     f"No sets for locations:{[v for v in df_geoloc.VenueFullName if v not in df.VenueFullName.unique()]}"
+        # )
 
 colored_header(
     label=":headphones: DJ AV's sets",
@@ -99,7 +102,6 @@ if len(err):
 
 df_viz = df.drop(columns=["Venue", "Area"])
 
-
 filtered_df = dataframe_explorer(df_viz, case=False)
 
 if len(filtered_df) > 0:
@@ -113,7 +115,7 @@ if len(filtered_df) > 0:
     st.markdown("## Count of sets by Month & Year")
     dff = (
         filtered_df.assign(
-            YearMonth=lambda x: x.index.strftime("%Y-%m"),
+            YearMonth=lambda x: x.Date.dt.strftime("%Y-%m"),
             # MonthYear=lambda x: x.index.strftime("%m-%Y"),
         )
         .groupby(["YearMonth", "EventType"])
