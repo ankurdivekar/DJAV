@@ -1,16 +1,16 @@
 # streamlit_app.py
 
-import streamlit as st
 import pandas as pd
+import plotly.express as px
+import streamlit as st
 from google.oauth2 import service_account
 
 # from shillelagh.backends.apsw.db import connect
 from gsheetsdb import connect
-from streamlit_extras.metric_cards import style_metric_cards
 from streamlit_extras.colored_header import colored_header
 from streamlit_extras.dataframe_explorer import dataframe_explorer
 from streamlit_extras.let_it_rain import rain
-import plotly.express as px
+from streamlit_extras.metric_cards import style_metric_cards
 
 st.set_page_config(
     layout="wide",
@@ -69,6 +69,10 @@ with st.spinner("Connecting to GSheets..."):
         ]:
             df[col] = df[col].astype("category")
 
+        print(
+            f"No sets for locations:{[v for v in df_geoloc.VenueFullName if v not in df.VenueFullName.unique()]}"
+        )
+
 colored_header(
     label=":headphones: DJ AV's sets",
     description="Built with :heart: by [DJ AV](https://instagram.com/raagarock)",
@@ -76,12 +80,12 @@ colored_header(
 )
 
 # Make headphone emojis rain!
-# rain(
-#     emoji="🎧",
-#     font_size=50,
-#     falling_speed=10,
-#     animation_length="infinite",
-# )
+rain(
+    emoji="🎧",
+    font_size=25,
+    falling_speed=10,
+    animation_length="infinite",
+)
 
 # st.write(df.columns)
 # st.write(df.head(5))
