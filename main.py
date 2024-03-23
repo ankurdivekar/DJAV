@@ -82,7 +82,7 @@ colored_header(
 # Make headphone emojis rain!
 rain(
     emoji="🎧",
-    font_size=25,
+    font_size=15,
     falling_speed=10,
     animation_length="infinite",
 )
