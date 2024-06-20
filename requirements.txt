@@ -5,3 +5,4 @@ protobuf==3.20.3
 streamlit==1.22.0
 streamlit_extras==0.2.7
 google-auth==2.19.0
+numpy==1.26.4
