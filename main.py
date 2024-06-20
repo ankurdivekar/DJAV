@@ -12,7 +12,7 @@ from streamlit_extras.dataframe_explorer import dataframe_explorer
 from streamlit_extras.let_it_rain import rain
 from streamlit_extras.metric_cards import style_metric_cards
 
-print("Streamlit version:", st.__version__)
+# print("Streamlit version:", st.__version__)
 st.set_page_config(
     layout="wide",
     page_title="DJ AV's Sets",
@@ -54,11 +54,15 @@ with st.spinner("Connecting to GSheets..."):
         df["longitude"] = pd.to_numeric(df.Longitude, errors="coerce")
         df = df.drop(columns=["Comments", "Payments", "Latitude", "Longitude"])
 
-        df.Date = pd.to_datetime(
-            df.Date,
-            format="%Y-%m-%d %H:%M:%S",
-            errors="raise",
-        )
+        # for d in df.Date:
+        #     print(d)
+
+        # df.Date = pd.to_datetime(
+        #     df.Date,
+        #     # format="%Y-%m-%d",
+        #     # format="mixed",
+        #     errors="raise",
+        # )
 
         df = df.sort_values(by="Date").reset_index(drop=True)
         df["SetNo"] = df.index + 1
@@ -86,7 +90,7 @@ colored_header(
 rain(
     emoji="🎧",
     font_size=15,
-    falling_speed=10,
+    falling_speed=12,
     animation_length="infinite",
 )
 
@@ -106,9 +110,9 @@ filtered_df = dataframe_explorer(df_viz, case=False)
 
 if len(filtered_df) > 0:
     f_col1, f_col2, f_col3, f_col4 = st.columns(4)
-    f_col1.metric(label="Sets played", value=filtered_df.shape[0])
-    f_col2.metric(label="Venues played at", value=filtered_df.VenueFullName.nunique())
-    f_col3.metric(label="Events played at", value=filtered_df.Event.nunique())
+    f_col1.metric(label="Sets Played", value=filtered_df.shape[0])
+    f_col2.metric(label="Venues", value=filtered_df.VenueFullName.nunique())
+    f_col3.metric(label="Events", value=filtered_df.Event.nunique())
     f_col4.metric(label="Organizers worked with", value=filtered_df.Organizer.nunique())
     style_metric_cards()
 
